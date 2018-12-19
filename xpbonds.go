@@ -17,6 +17,14 @@ import (
 
 var reNumber = regexp.MustCompile(`^[[:digit:]]+$`)
 
+// ignoreCells are the cell contents that will identify rows that should be
+// ignored when parsing the converted excel.
+var ignoreCells = map[string]bool{
+	"Name": true,
+	"BRAZIL BONDS (USD) - DAILY INDICATIVE RUN": true,
+	"Disclaimers": true,
+}
+
 // BondRates contains the location of the bond rates.
 type BondRates struct {
 	Location string `json:"location"`
@@ -64,8 +72,6 @@ type BondRisk struct {
 // downloads the bond rates from the given location, converts it from PDF to
 // Excel format and perform some sorting actions to determinate the best bond.
 func HandleRequest(ctx context.Context, rates BondRates) (Bonds, error) {
-	log.Printf("Retrieving rates from location %s", rates.Location)
-
 	response, err := http.Get(rates.Location)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get rates")
@@ -82,9 +88,7 @@ func HandleRequest(ctx context.Context, rates BondRates) (Bonds, error) {
 		return nil, errors.Wrap(err, "failed to parse excel")
 	}
 
-	log.Printf("Bonds before filtering: %#v", bonds)
 	bonds = filterBonds(bonds)
-	log.Printf("Bonds after filtering: %#v", bonds)
 	sort.Sort(bonds)
 	return bonds, nil
 }
@@ -97,18 +101,10 @@ func parseExcel(excel string) (Bonds, error) {
 
 	rows := xlsx.GetRows("Sheet1")
 	normalized := make(Bonds, 0, len(rows))
-	log.Printf("Parsing %d rows", len(rows))
 
 	for i, row := range rows {
 		if len(row) != 16 {
-			log.Printf("Warning: Row with only %d columns", len(row))
 			continue
-		}
-
-		ignoreCells := map[string]bool{
-			"Name": true,
-			"BRAZIL BONDS (USD) - DAILY INDICATIVE RUN": true,
-			"Disclaimers": true,
 		}
 
 		cell := strings.TrimSpace(row[0])

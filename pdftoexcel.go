@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"mime/multipart"
 	"net/http"
@@ -37,7 +36,6 @@ func pdfToExcel(pdf io.Reader) (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "failed to upload PDF")
 	}
-	log.Printf("Job ID %s retrieved successfully", jobID)
 
 	var downloadURL string
 	for {
@@ -48,11 +46,8 @@ func pdfToExcel(pdf io.Reader) (string, error) {
 		} else if downloadURL != "" {
 			break
 		}
-
-		log.Print("Conversion not done yet, waiting...")
 	}
 
-	log.Printf("Downloading excel file at %s", downloadURL)
 	excel, err := downloadExcel(downloadURL)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to download excel")
