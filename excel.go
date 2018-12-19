@@ -29,24 +29,7 @@ func parseExcel(excel string) (Bonds, error) {
 	normalized := make(Bonds, 0, len(rows))
 
 	for i, row := range rows {
-		if len(row) != 16 {
-			continue
-		}
-
-		cell := strings.TrimSpace(row[0])
-		if cell == "" || ignoreCells[cell] || reNumber.MatchString(cell) {
-			continue
-		}
-
-		// detect and remove lines without value
-		empty := true
-		for _, cell := range row[1:] {
-			if cell != "" {
-				empty = false
-				break
-			}
-		}
-		if empty {
+		if ignoreRow(row) {
 			continue
 		}
 
@@ -61,4 +44,25 @@ func parseExcel(excel string) (Bonds, error) {
 	}
 
 	return normalized, nil
+}
+
+func ignoreRow(row []string) bool {
+	if len(row) != 16 {
+		return true
+	}
+
+	cell := strings.TrimSpace(row[0])
+	if cell == "" || ignoreCells[cell] || reNumber.MatchString(cell) {
+		return true
+	}
+
+	// detect and remove lines without value
+	empty := true
+	for _, cell := range row[1:] {
+		if cell != "" {
+			empty = false
+			break
+		}
+	}
+	return empty
 }
