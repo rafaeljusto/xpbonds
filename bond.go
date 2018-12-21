@@ -1,4 +1,4 @@
-package main
+package xpbonds
 
 import (
 	"strconv"
@@ -7,8 +7,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// BondRates contains the location of the bond rates.
-type BondRates struct {
+// BondReport contains the location of the bond rates.
+type BondReport struct {
 	Location string `json:"location"`
 }
 

@@ -1,6 +1,9 @@
 XP Bonds
 ========
 
+[![GoDoc](https://godoc.org/github.com/rafaeljusto/xpbonds?status.png)](https://godoc.org/github.com/rafaeljusto/xpbonds)
+[![license](http://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/rafaeljusto/xpbonds/master/LICENSE)
+
 Serverless solution to download, parse and analyze bond reports from [XP Investments](https://xpsecurities.com/en/). It was built to run in [AWS Lambda service](https://aws.amazon.com/lambda/).
 
 How does it works?
@@ -22,8 +25,8 @@ Setup
 -----
 
 ```shell
-% go get -u github.com/rafaeljusto/xpbonds
-% cd $GOPATH/github.com/rafaeljusto/xpbonds
+% go get -u github.com/rafaeljusto/xpbonds/...
+% cd $GOPATH/github.com/rafaeljusto/xpbonds/cmd/xpbonds
 % GOOS=linux go build -o xpbonds *.go && zip xpbonds.zip ./xpbonds
 % aws lambda create-function \
   --region <region> \
@@ -38,7 +41,7 @@ Setup
 Protocol
 --------
 
-The expected JSON that the service is expecting is:
+The JSON that the service is expecting a [events.APIGatewayProxyRequest](https://godoc.org/github.com/aws/aws-lambda-go/events#APIGatewayProxyRequest), where the method should be `POST` and the body should be something like:
 
 ```json
 {
@@ -46,7 +49,7 @@ The expected JSON that the service is expecting is:
 }
 ```
 
-And the response will be a list of bonds in the following format:
+CORS is enable to make it easy for cross-domain requests. The response will be a [events.APIGatewayProxyResponse](https://godoc.org/github.com/aws/aws-lambda-go/events#APIGatewayProxyResponse), where the body will contain a list of bonds in the following format:
 
 ```json
 [
@@ -72,3 +75,10 @@ And the response will be a list of bonds in the following format:
 ```
 
 **PS:** `maturity` could be null when the bond has no end date.
+
+User Interface
+--------------
+
+There's a simple user web interface to easy retrieve the best bonds.
+
+![User Interface](https://github.com/rafaeljusto/xpbonds/raw/master/xpbonds-ui.png "User Interface")
