@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+
+    <title>XP Investments - Bonds Report</title>
+  </head>
+  <body>
+    <div class="container-fluid">
+      <h1>XP Investments - Bonds Report</h1>
+
+      <form id="form" class="mb-4">
+        <div class="form-group">
+          <label for="reportLink">Report Link</label>
+          <input type="text" name="reportLink" id="reportLink" class="form-control" aria-describedby="reportLinkHelp" placeholder="Enter report link" required>
+          <small id="reportLinkHelp" class="form-text text-muted">Add the report link received by e-mail from XP Investments.</small>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg" id="sendReport">Submit</button>
+      </form>
+
+      <table class="table table-striped table-hover table-bordered" id="result">
+        <thead>
+          <tr>
+            <th class="align-middle" scope="col" rowspan="2">Name</th>
+            <th class="align-middle" scope="col" rowspan="2">Security</th>
+            <th class="align-middle" scope="col" rowspan="2">Coupon</th>
+            <th class="align-middle" scope="col" rowspan="2">Yield</th>
+            <th class="align-middle" scope="col" rowspan="2">Maturity</th>
+            <th class="align-middle" scope="col" rowspan="2">Last Price</th>
+            <th class="align-middle" scope="col" rowspan="2">Duration</th>
+            <th class="align-middle" scope="col" rowspan="2">Years to Maturity</th>
+            <th class="align-middle" scope="col" rowspan="2">Minimum Piece</th>
+            <th class="align-middle" scope="col" rowspan="2">Country</th>
+            <th class="align-middle" scope="col" colspan="3">Risk</th>
+            <th class="align-middle" scope="col" rowspan="2">Code</th>
+          </tr>
+          <tr>
+            <th class="align-middle" scope="col">S&P</th>
+            <th class="align-middle" scope="col">Moody's</th>
+            <th class="align-middle" scope="col">Fitch</th>
+          </tr>
+        </thead>
+      </table>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/plug-ins/1.10.19/dataRender/datetime.js"></script>
+
+    <script lang="text/javascript">
+    $(document).ready(function() {
+      var datatable = $("#result").DataTable({
+        columns: [
+          { data: "name" },
+          { data: "security" },
+          { data: "coupon" },
+          { data: "yield" },
+          { data: "maturity" },
+          { data: "lastPrice" },
+          { data: "duration" },
+          { data: "yearsToMaturity" },
+          { data: "minimumPiece" },
+          { data: "country" },
+          { data: "risk.standardPoor" },
+          { data: "risk.moody" },
+          { data: "risk.fitch" },
+          { data: "code" }
+        ],
+        columnDefs: [{
+          targets: 4,
+          render: $.fn.dataTable.render.moment("YYYY-MM-DDTHH:mm:ssZ", "YYYY-MM-DD")
+        }],
+        "order": [[ 2, "desc" ]],
+        "paging": false
+      });
+
+      $("#form").on("submit", function(e) {
+        e.preventDefault();
+        $("#sendReport").addClass("disabled");
+        $("#sendReport").html("<i class='fa fa-cog fa-spin'></i> Processing");
+
+        $.ajax({
+          url: "https://gicpsb630h.execute-api.us-east-1.amazonaws.com/default/xpbonds",
+          method: "post",
+          contentType: "application/json; charset=utf-8",
+          data: JSON.stringify({
+            location: $("#reportLink").val()
+          }),
+          dataType: "json",
+          success: function(data, textStatus, jqXHR) {
+            datatable.clear().draw();
+            datatable.rows.add(data);
+            datatable.columns.adjust().draw();
+
+            $("#sendReport").removeClass("disabled");
+            $("#sendReport").html("Submit");
+          },
+          error: function(jqXHR, textStatus, errorThrown) {
+            console.info(jqXHR);
+            alert("Request failed");
+
+            $("#sendReport").removeClass("disabled");
+            $("#sendReport").html("Submit");
+          }
+        });
+      });
+    });
+    </script>
+  </body>
+</html>
