@@ -1,68 +1,55 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
+	"log"
 	"net/http"
 
-	"github.com/aws/aws-lambda-go/events"
-	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/pkg/errors"
 	"github.com/rafaeljusto/xpbonds"
 )
 
-// HandleRequest adds serveless approach for determinating the best bonds.
-func HandleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func handler(w http.ResponseWriter, r *http.Request) {
 	// enable CORS
-	headers := map[string]string{
-		"Access-Control-Allow-Origin":  "*",
-		"Access-Control-Allow-Methods": "OPTIONS,POST",
-		"Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-	}
-	if request.HTTPMethod == "OPTIONS" {
-		return events.APIGatewayProxyResponse{
-			StatusCode: http.StatusOK,
-			Headers:    headers,
-		}, nil
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "OPTIONS,POST")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization")
 
-	} else if request.HTTPMethod != "POST" {
-		return events.APIGatewayProxyResponse{
-			StatusCode: http.StatusMethodNotAllowed,
-			Headers:    headers,
-		}, nil
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+
+	} else if r.Method != "POST" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
 	}
 
 	var rates xpbonds.BondReport
-	if err := json.Unmarshal([]byte(request.Body), &rates); err != nil {
-		return events.APIGatewayProxyResponse{
-			StatusCode: http.StatusBadRequest,
-			Headers:    headers,
-		}, errors.Wrap(err, "failed to parse body")
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&rates); err != nil {
+		log.Printf("failed to parse body: %s", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
-	bonds, err := xpbonds.FindBestBonds(ctx, rates)
+	bonds, err := xpbonds.FindBestBonds(r.Context(), rates)
 	if err != nil {
-		return events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Headers:    headers,
-		}, errors.Wrap(err, "failed to find the best bonds")
+		log.Printf("failed to find the best bonds: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	bondsRaw, err := json.Marshal(bonds)
 	if err != nil {
-		return events.APIGatewayProxyResponse{
-			StatusCode: http.StatusInternalServerError,
-			Headers:    headers,
-		}, errors.Wrap(err, "failed to encode bonds")
+		log.Printf("failed to encode bonds: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	return events.APIGatewayProxyResponse{
-		StatusCode: http.StatusOK,
-		Headers:    headers,
-		Body:       string(bondsRaw),
-	}, nil
+	w.WriteHeader(http.StatusOK)
+	w.Write(bondsRaw)
 }
 
 func main() {
-	lambda.Start(HandleRequest)
+	http.HandleFunc("/", handler)
+	log.Fatal(http.ListenAndServe(":8090", nil))
 }

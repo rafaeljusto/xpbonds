@@ -1,7 +1,9 @@
 package xpbonds
 
 import (
+	"log"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -20,6 +22,8 @@ type Bond struct {
 	Yield           float64    `json:"yield"`
 	Maturity        *time.Time `json:"maturity"`
 	LastPrice       float64    `json:"lastPrice"`
+	CurrentPrice    *float64   `json:"currentPrice"`
+	CurrentPriceURL *string    `json:"currentPriceURL"`
 	Duration        float64    `json:"duration"`
 	YearsToMaturity float64    `json:"yearsToMaturity"`
 	MinimumPiece    float64    `json:"minimumPiece"`
@@ -132,4 +136,19 @@ func (b Bonds) Filter() Bonds {
 		}
 	}
 	return filtered
+}
+
+// FillCurrentPrice looks for the current price from the given bonds.
+func (b Bonds) FillCurrentPrice() {
+	var wg sync.WaitGroup
+	for i := range b {
+		wg.Add(1)
+		go func(bond *Bond) {
+			if err := fillCurrentBondPrice(bond); err != nil {
+				log.Printf("failed to retrieve the last bond price: %s", err)
+			}
+			wg.Done()
+		}(&b[i])
+	}
+	wg.Wait()
 }

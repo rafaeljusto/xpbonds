@@ -33,6 +33,7 @@
             <th class="align-middle" scope="col" rowspan="2">Yield</th>
             <th class="align-middle" scope="col" rowspan="2">Maturity</th>
             <th class="align-middle" scope="col" rowspan="2">Last Price</th>
+            <th class="align-middle" scope="col" rowspan="2">Current Price</th>
             <th class="align-middle" scope="col" rowspan="2">Duration</th>
             <th class="align-middle" scope="col" rowspan="2">Years to Maturity</th>
             <th class="align-middle" scope="col" rowspan="2">Minimum Piece</th>
@@ -66,6 +67,18 @@
           { data: "yield" },
           { data: "maturity" },
           { data: "lastPrice" },
+          {
+            data: "currentPrice",
+            "fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {
+              if (oData.currentPriceURL !== null && oData.currentPrice !== null) {
+                $(nTd).html("<a href='"+oData.currentPriceURL+"'>"+oData.currentPrice+"</a>");
+              } else if (oData.currentPriceURL !== null) {
+                $(nTd).html("<a href='"+oData.currentPriceURL+"'>reference</a>");
+              } else {
+                $(nTd).html("-");
+              }
+            }
+          },
           { data: "duration" },
           { data: "yearsToMaturity" },
           { data: "minimumPiece" },
@@ -88,8 +101,13 @@
         $("#sendReport").addClass("disabled");
         $("#sendReport").html("<i class='fa fa-cog fa-spin'></i> Processing");
 
+        // ATTENTION
+        // ---------
+        //
+        // url configured for localhost testing, please replace for the AWS API
+        // route or your webserver address
         $.ajax({
-          url: "https://gicpsb630h.execute-api.us-east-1.amazonaws.com/default/xpbonds",
+          url: "http://localhost:8090/",
           method: "post",
           contentType: "application/json; charset=utf-8",
           data: JSON.stringify({

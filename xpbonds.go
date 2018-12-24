@@ -29,6 +29,7 @@ func FindBestBonds(ctx context.Context, report BondReport) (Bonds, error) {
 	}
 
 	bonds = bonds.Filter()
+	bonds.FillCurrentPrice()
 	sort.Sort(bonds)
 	return bonds, nil
 }
