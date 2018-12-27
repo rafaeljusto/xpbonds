@@ -1,7 +1,6 @@
 package xpbonds
 
 import (
-	"log"
 	"regexp"
 	"strings"
 
@@ -28,12 +27,10 @@ func parseExcel(excel string) (Bonds, error) {
 	rows := xlsx.GetRows("Sheet1")
 	normalized := make(Bonds, 0, len(rows))
 
-	for i, row := range rows {
+	for _, row := range rows {
 		if ignoreRow(row) {
 			continue
 		}
-
-		log.Printf("Row %d: %#v", i, row)
 
 		bond, err := parseBond(row)
 		if err != nil {
