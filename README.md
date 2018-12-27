@@ -4,7 +4,7 @@ XP Bonds
 [![GoDoc](https://godoc.org/github.com/rafaeljusto/xpbonds?status.png)](https://godoc.org/github.com/rafaeljusto/xpbonds)
 [![license](http://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/rafaeljusto/xpbonds/master/LICENSE)
 
-[Serverless solution](https://github.com/rafaeljusto/xpbonds/blob/master/cmd/xpbonds-serveless/main.go) to download, parse and analyze bond reports from [XP Investments](https://xpsecurities.com/en/). It was built to run in [AWS Lambda service](https://aws.amazon.com/lambda/).
+[Serverless solution](https://github.com/rafaeljusto/xpbonds/blob/master/cmd/xpbonds-serveless/main.go) to download, parse and analyze bond reports from [XP Investments](https://www.xpi.us). It was built to run in [AWS Lambda service](https://aws.amazon.com/lambda/).
 
 There's also a [common HTTP server solution](https://github.com/rafaeljusto/xpbonds/blob/master/cmd/xpbonds/main.go) that can be used in other environments.
 
