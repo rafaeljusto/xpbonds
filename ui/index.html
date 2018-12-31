@@ -97,21 +97,27 @@
             }
           },
           { data: "maturity" },
-          { data: "lastPrice" },
+          {
+            data: "lastPrice",
+            "fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {
+              $(nTd).html(numeral(oData.lastPrice).format("$0,0.00"));
+            }
+          },
           {
             data: "currentPrice",
             "fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {
               if (oData.currentPriceURL !== null && oData.currentPrice !== null) {
                 var currentPrice = parseFloat(oData.currentPrice);
+                var currentPriceStr = numeral(oData.currentPrice).format("$0,0.00");
                 var lastPrice = parseFloat(oData.lastPrice);
                 var percentage = (currentPrice*100/lastPrice)-100;
 
                 if (currentPrice < lastPrice) {
-                  $(nTd).html("<a class='text-success' href='"+oData.currentPriceURL+"'>"+oData.currentPrice+" (<i class='fas fa-arrow-down'></i> " + percentage.toFixed(2) + "%)</a>");
+                  $(nTd).html("<a class='text-success' href='"+oData.currentPriceURL+"'>"+currentPriceStr+" (<i class='fas fa-arrow-down'></i> " + percentage.toFixed(2) + "%)</a>");
                 } else if (currentPrice > lastPrice) {
-                  $(nTd).html("<a class='text-danger' href='"+oData.currentPriceURL+"'>"+oData.currentPrice+" (<i class='fas fa-arrow-up'></i> " + percentage.toFixed(2) + "%)</a>");
+                  $(nTd).html("<a class='text-danger' href='"+oData.currentPriceURL+"'>"+currentPriceStr+" (<i class='fas fa-arrow-up'></i> " + percentage.toFixed(2) + "%)</a>");
                 } else {
-                  $(nTd).html("<a href='"+oData.currentPriceURL+"'>"+oData.currentPrice+"</a>");
+                  $(nTd).html("<a href='"+oData.currentPriceURL+"'>"+currentPriceStr+"</a>");
                 }
               } else if (oData.currentPriceURL !== null) {
                 $(nTd).html("<a href='"+oData.currentPriceURL+"'>reference</a>");
