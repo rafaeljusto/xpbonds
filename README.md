@@ -21,8 +21,8 @@ It will convert the PDF into an Excel spreadsheet using the [PDFToExcel](https:/
 
 The resulted bonds will be sorted by coupon.
 
-Setup
------
+Serveless Setup
+---------------
 
 ```shell
 % go get -u github.com/rafaeljusto/xpbonds/...
@@ -79,6 +79,6 @@ CORS is enable to make it easy for cross-domain requests. The response will be a
 User Interface
 --------------
 
-There's a simple user web interface to easy retrieve the best bonds. If you decide using it, please remember to replace an internal URL for your production server.
+There's a simple user web interface to easy retrieve the best bonds. If you decide using it, please remember to replace an [internal URL for your production server](https://github.com/rafaeljusto/xpbonds/blob/a0b793e022fc16926240c9f8eaa4ae531d41c553/ui/index.html#L177).
 
 ![User Interface](https://github.com/rafaeljusto/xpbonds/raw/master/xpbonds-ui.png "User Interface")

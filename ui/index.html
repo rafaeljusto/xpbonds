@@ -168,8 +168,13 @@
         $("#sendReport").addClass("disabled");
         $("#sendReport").html("<i class='fa fa-cog fa-spin'></i> Processing");
 
+        // ATTENTION
+        // ---------
+        //
+        // url configured for localhost testing, please replace for the AWS API
+        // route or your webserver address
         $.ajax({
-          url: "https://gicpsb630h.execute-api.us-east-1.amazonaws.com/default/xpbonds",
+          url: "http://localhost:8090/",
           method: "post",
           contentType: "application/json; charset=utf-8",
           data: JSON.stringify({
