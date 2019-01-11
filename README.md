@@ -4,16 +4,18 @@ XP Bonds
 [![GoDoc](https://godoc.org/github.com/rafaeljusto/xpbonds?status.png)](https://godoc.org/github.com/rafaeljusto/xpbonds)
 [![license](http://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/rafaeljusto/xpbonds/master/LICENSE)
 
-[Serverless solution](https://github.com/rafaeljusto/xpbonds/blob/master/cmd/xpbonds-serveless/main.go) to download, parse and analyze bond reports from [XP Investments](https://www.xpi.us). It was built to run in [AWS Lambda service](https://aws.amazon.com/lambda/). There's also a [common HTTP server solution](https://github.com/rafaeljusto/xpbonds/blob/master/cmd/xpbonds/main.go) that can be used in other environments.
+[Serverless solution](https://github.com/rafaeljusto/xpbonds/blob/master/cmd/xpbonds-serveless/main.go) to parse and analyze bond reports from [XP Investments](https://www.xpi.us). It was built to run in [AWS Lambda service](https://aws.amazon.com/lambda/). There's also a [common HTTP server solution](https://github.com/rafaeljusto/xpbonds/blob/master/cmd/xpbonds/main.go) that can be used in other environments.
 
 How does it works?
 ------------------
 
-The service receives a link to download a PDF report from XP Investments like the bellow.
+The service receives the Focused Lists report from XP Investments, in Excel
+format (xlsx), like the bellow.
 
 ![XP Investments Report Example](https://github.com/rafaeljusto/xpbonds/raw/master/xpbonds.png "XP Investments Report Example")
 
-It will convert the PDF into an Excel spreadsheet using the [PDFToExcel](https://www.pdftoexcel.com/) service. The generated Excel will be analyzed filtering undesired bonds with the following rules:
+The Excel report will be analyzed filtering undesired bonds with the following
+rules:
 
 * Coupon must be equal or greater than 5%
 * Maturity must be in the next 6 years
@@ -45,7 +47,7 @@ The JSON that the service is expecting a [events.APIGatewayProxyRequest](https:/
 
 ```json
 {
-  "location": "https://gallery.mailchimp.com/.../files/.../Daily_List_Brazil_20181210.pdf"
+  "xlsxReport": "EsDBBQABgAIAAAAIQBG8ICPdQEAAD...BQYAAAAADwAPAN4DAABChAEAAAA="
 }
 ```
 

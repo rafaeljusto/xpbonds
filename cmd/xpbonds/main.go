@@ -23,15 +23,15 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var rates xpbonds.BondReport
+	var report xpbonds.BondReport
 	decoder := json.NewDecoder(r.Body)
-	if err := decoder.Decode(&rates); err != nil {
+	if err := decoder.Decode(&report); err != nil {
 		log.Printf("failed to parse body: %s", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	bonds, err := xpbonds.FindBestBonds(r.Context(), rates)
+	bonds, err := xpbonds.FindBestBonds(r.Context(), report)
 	if err != nil {
 		log.Printf("failed to find the best bonds: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)

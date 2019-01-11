@@ -32,13 +32,22 @@ func HandleRequest(ctx context.Context, request events.APIGatewayProxyRequest) (
 		}, nil
 	}
 
-	var rates xpbonds.BondReport
-	if err := json.Unmarshal([]byte(request.Body), &rates); err != nil {
+	// limit upload file to 500kb
+	if err := r.ParseMultipartForm(32 << 14); err != nil {
 		return events.APIGatewayProxyResponse{
 			StatusCode: http.StatusBadRequest,
 			Headers:    headers,
-		}, errors.Wrap(err, "failed to parse body")
+		}, errors.Wrap(err, "failed to setup upload")
 	}
+
+	report, _, err := r.FormFile("report")
+	if err != nil {
+		return events.APIGatewayProxyResponse{
+			StatusCode: http.StatusBadRequest,
+			Headers:    headers,
+		}, errors.Wrap(err, "failed to read upload")
+	}
+	defer report.Close()
 
 	bonds, err := xpbonds.FindBestBonds(ctx, rates)
 	if err != nil {

@@ -9,9 +9,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-// BondReport contains the location of the bond rates.
+// BondReport contains all bonds data to be analyzed.
 type BondReport struct {
-	Location string `json:"location"`
+	XLXSReport string `json:"xlsxReport"`
 }
 
 // Bond contains the bond descriptions.
@@ -53,53 +53,63 @@ func (b Bond) Interesting() bool {
 	return true
 }
 
-func parseBond(row []string) (Bond, error) {
+func parseBond(row row) (Bond, error) {
 	bond := Bond{
-		Name:     row[0],
-		Security: row[1],
+		Name:     row.get(0),
+		Security: row.get(1),
 		Risk: BondRisk{
-			StandardPoor: row[9],
-			Moody:        row[10],
-			Fitch:        row[11],
+			StandardPoor: row.get(9),
+			Moody:        row.get(10),
+			Fitch:        row.get(11),
 		},
-		Country: row[14],
-		Code:    row[15],
+		Country: row.get(14),
+		Code:    row.get(15),
 	}
 
 	var err error
 
-	if bond.Coupon, err = strconv.ParseFloat(row[2], 64); err != nil {
-		return bond, errors.Wrap(err, "failed to parse coupon")
+	if coupon := row.get(2); coupon != "" {
+		if bond.Coupon, err = strconv.ParseFloat(coupon, 64); err != nil {
+			return bond, errors.Wrap(err, "failed to parse coupon")
+		}
 	}
 
-	if row[3] != "n.a." {
-		maturity, err := time.Parse("1/2/2006", row[3])
+	if maturity := row.get(3); maturity != "" {
+		m, err := parseBRTime(maturity)
 		if err != nil {
 			return bond, errors.Wrap(err, "failed to parse maturity")
 		}
-		bond.Maturity = &maturity
+		bond.Maturity = &m
 	}
 
-	if bond.LastPrice, err = strconv.ParseFloat(row[5], 64); err != nil {
-		return bond, errors.Wrap(err, "failed to parse last price")
+	if lastPrice := row.get(5); lastPrice != "" {
+		if bond.LastPrice, err = strconv.ParseFloat(lastPrice, 64); err != nil {
+			return bond, errors.Wrap(err, "failed to parse last price")
+		}
 	}
 
-	if bond.Yield, err = strconv.ParseFloat(row[6], 64); err != nil {
-		return bond, errors.Wrap(err, "failed to parse yield")
+	if yield := row.get(6); yield != "" {
+		if bond.Yield, err = strconv.ParseFloat(yield, 64); err != nil {
+			return bond, errors.Wrap(err, "failed to parse yield")
+		}
 	}
 
-	if bond.Duration, err = strconv.ParseFloat(row[7], 64); err != nil {
-		return bond, errors.Wrap(err, "failed to parse duration")
+	if duration := row.get(7); duration != "" {
+		if bond.Duration, err = strconv.ParseFloat(duration, 64); err != nil {
+			return bond, errors.Wrap(err, "failed to parse duration")
+		}
 	}
 
-	if row[8] != "n.a." {
-		if bond.YearsToMaturity, err = strconv.ParseFloat(row[8], 64); err != nil {
+	if yearsToMaturity := row.get(8); yearsToMaturity != "" {
+		if bond.YearsToMaturity, err = strconv.ParseFloat(yearsToMaturity, 64); err != nil {
 			return bond, errors.Wrap(err, "failed to parse years to maturity")
 		}
 	}
 
-	if bond.MinimumPiece, err = strconv.ParseFloat(row[13], 64); err != nil {
-		return bond, errors.Wrap(err, "failed to parse minimum piece")
+	if minimumPiece := row.get(13); minimumPiece != "" {
+		if bond.MinimumPiece, err = strconv.ParseFloat(minimumPiece, 64); err != nil {
+			return bond, errors.Wrap(err, "failed to parse minimum piece")
+		}
 	}
 
 	return bond, nil
@@ -151,4 +161,12 @@ func (b Bonds) FillCurrentPrice() {
 		}(&b[i])
 	}
 	wg.Wait()
+}
+
+func parseBRTime(value string) (time.Time, error) {
+	t, err := time.Parse("2/1/2006", value)
+	if err != nil {
+		return t, errors.Wrap(err, "failed to parse time in brazilian format")
+	}
+	return t, nil
 }

@@ -1,29 +1,25 @@
 package xpbonds
 
 import (
+	"bytes"
 	"context"
-	"net/http"
+	"encoding/base64"
 	"sort"
 
 	"github.com/pkg/errors"
 )
 
-// FindBestBonds determinates the best bonds from the bond report. It downloads
-// the bond report from the given location, converts it from PDF to Excel format
-// and perform some sorting actions to determinate the best bond.
+// FindBestBonds determinates the best bonds from the bond report. It expects
+// the report to contain a xlsx content (Excel) encoded in base64. After parsing
+// the xlxs it performs some filtering and sorting actions to determinate the
+// best bond.
 func FindBestBonds(ctx context.Context, report BondReport) (Bonds, error) {
-	response, err := http.Get(report.Location)
+	excel, err := base64.StdEncoding.DecodeString(report.XLXSReport)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get report")
-	}
-	defer response.Body.Close()
-
-	excel, err := pdfToExcel(response.Body)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to convert from PDF to excel")
+		return nil, errors.Wrap(err, "failed to decode excel report")
 	}
 
-	bonds, err := parseExcel(excel)
+	bonds, err := parseExcel(bytes.NewReader(excel))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse excel")
 	}
