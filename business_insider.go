@@ -3,6 +3,7 @@ package xpbonds
 import (
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"regexp"
 	"strconv"
@@ -11,6 +12,8 @@ import (
 )
 
 var (
+	client http.Client
+
 	reBusinessInsiderBondID    = regexp.MustCompile(`^.*new Array\(new Array\(.*"(.*?)\|.*$`)
 	reBusinessInsiderBondPrice = regexp.MustCompile(`.*>\s+(\d+\.\d{2}).*`)
 )

@@ -3,15 +3,43 @@ package xpbonds
 import (
 	"log"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/pkg/errors"
 )
 
+// DateFormat defines all acceptable date formats used when parsing the report.
+type DateFormat string
+
+// List of available date formats.
+const (
+	DateFormatDDMMYYYY = "dd/mm/yyyy"
+	DateFormatMMDDYYYY = "mm/dd/yyyy"
+)
+
+// UnmarshalJSON parse the date format input value. It will return an error if
+// the date format isn't acceptable.
+func (d *DateFormat) UnmarshalJSON(data []byte) error {
+	dataStr := string(data)
+	dataStr = strings.TrimSpace(dataStr)
+	dataStr = strings.ToLower(dataStr)
+
+	switch dataStr {
+	case string(DateFormatDDMMYYYY):
+		*d = DateFormatDDMMYYYY
+	case string(DateFormatMMDDYYYY):
+		*d = DateFormatMMDDYYYY
+	}
+
+	return errors.Errorf("invalid date format '%s'", dataStr)
+}
+
 // BondReport contains all bonds data to be analyzed.
 type BondReport struct {
-	XLXSReport string `json:"xlsxReport"`
+	XLXSReport string     `json:"xlsxReport"`
+	DateFormat DateFormat `json:"dateFormat"`
 }
 
 // Bond contains the bond descriptions.
@@ -53,7 +81,7 @@ func (b Bond) Interesting() bool {
 	return true
 }
 
-func parseBond(row row) (Bond, error) {
+func parseBond(row row, dateFormat DateFormat) (Bond, error) {
 	bond := Bond{
 		Name:     row.get(0),
 		Security: row.get(1),
@@ -75,7 +103,7 @@ func parseBond(row row) (Bond, error) {
 	}
 
 	if maturity := row.get(3); maturity != "" {
-		m, err := parseBRTime(maturity)
+		m, err := parseTime(maturity, dateFormat)
 		if err != nil {
 			return bond, errors.Wrap(err, "failed to parse maturity")
 		}
@@ -163,10 +191,18 @@ func (b Bonds) FillCurrentPrice() {
 	wg.Wait()
 }
 
-func parseBRTime(value string) (time.Time, error) {
-	t, err := time.Parse("2/1/2006", value)
+func parseTime(value string, dateFormat DateFormat) (time.Time, error) {
+	var format string
+	switch dateFormat {
+	case DateFormatDDMMYYYY:
+		format = "2/1/2006"
+	default: // DateFormatMMDDYYYY
+		format = "1/2/2006"
+	}
+
+	t, err := time.Parse(format, value)
 	if err != nil {
-		return t, errors.Wrap(err, "failed to parse time in brazilian format")
+		return t, errors.Wrap(err, "failed to parse time")
 	}
 	return t, nil
 }

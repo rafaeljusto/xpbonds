@@ -10,7 +10,7 @@ import (
 
 const invalidCell = "#VALUE!"
 
-func parseExcel(excel io.Reader) (Bonds, error) {
+func parseExcel(excel io.Reader, dateFormat DateFormat) (Bonds, error) {
 	xlsx, err := excelize.OpenReader(excel)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open excel")
@@ -20,7 +20,7 @@ func parseExcel(excel io.Reader) (Bonds, error) {
 	var bonds Bonds
 	for _, sheet := range sheets {
 		rows := xlsx.GetRows(sheet)
-		sheetBonds, err := parseSheet(rows)
+		sheetBonds, err := parseSheet(rows, dateFormat)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to parse sheet '%s'", sheet)
 		}
@@ -30,7 +30,7 @@ func parseExcel(excel io.Reader) (Bonds, error) {
 	return bonds, nil
 }
 
-func parseSheet(rows [][]string) (Bonds, error) {
+func parseSheet(rows [][]string, dateFormat DateFormat) (Bonds, error) {
 	normalized := make(Bonds, 0, len(rows))
 
 	for _, r := range rows {
@@ -39,7 +39,7 @@ func parseSheet(rows [][]string) (Bonds, error) {
 			continue
 		}
 
-		bond, err := parseBond(row)
+		bond, err := parseBond(row, dateFormat)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to parse bond")
 		}
