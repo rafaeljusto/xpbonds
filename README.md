@@ -17,11 +17,12 @@ format (xlsx), like the bellow.
 The Excel report will be analyzed filtering undesired bonds with the following
 rules:
 
-* Coupon must be equal or greater than 5%
-* Maturity must be in the next 6 years
-* Price must be between U$95 and U$101
+* Minimum coupon rate
+* Maturity
+* Price
 
-The resulted bonds will be sorted by coupon.
+The resulted bonds will be sorted by coupon. Current market price will also be
+retrieved to compare with the report (when available).
 
 Serveless Setup
 ---------------
@@ -43,13 +44,29 @@ Serveless Setup
 Serveless Protocol
 ------------------
 
-The JSON that the service is expecting a [events.APIGatewayProxyRequest](https://godoc.org/github.com/aws/aws-lambda-go/events#APIGatewayProxyRequest), where the method should be `POST` and the body should be something like:
+The JSON that the service is expecting a [events.APIGatewayProxyRequest](https://godoc.org/github.com/aws/aws-lambda-go/events#APIGatewayProxyRequest), where the method should be `POST` and the body should be:
 
 ```json
 {
-  "xlsxReport": "EsDBBQABgAIAAAAIQBG8ICPdQEAAD...BQYAAAAADwAPAN4DAABChAEAAAA="
+  "xlsxReport": "EsDBBQABgAIAAAAIQBG8ICPdQEAAD...BQYAAAAADwAPAN4DAABChAEAAAA=",
+  "dateFormat": "MM/DD/YYYY",
+  "minCoupon": 5,
+  "maxMaturity": 6,
+  "minPrice": 95,
+  "maxPrice": 101
 }
 ```
+
+Where:
+* **xlsxReport** is the XLSX report encoded in base64;
+* **dateFormat** defines the date format used in the report, possible values are
+  `MM/DD/YYYY` or `DD/MM/YYYY`;
+* **minCoupon** will filter bonds that have a coupon rate less than the
+  provided;
+* **maxMaturity** defined in years also will filter bonds with an expiration
+  date too far away;
+* **minPrice** and **maxPrice** defines a range of acceptable market prices for
+  the bonds.
 
 CORS is enable to make it easy for cross-domain requests. The response will be a [events.APIGatewayProxyResponse](https://godoc.org/github.com/aws/aws-lambda-go/events#APIGatewayProxyResponse), where the body will contain a list of bonds in the following format:
 

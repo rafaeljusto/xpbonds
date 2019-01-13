@@ -1,6 +1,7 @@
 package xpbonds
 
 import (
+	"encoding/json"
 	"log"
 	"strconv"
 	"strings"
@@ -38,8 +39,39 @@ func (d *DateFormat) UnmarshalJSON(data []byte) error {
 
 // BondReport contains all bonds data to be analyzed.
 type BondReport struct {
+	Filter
+
 	XLXSReport string     `json:"xlsxReport"`
 	DateFormat DateFormat `json:"dateFormat"`
+}
+
+// Filter contains all filters that can be used to determinate the best bond.
+type Filter struct {
+	MinimumCoupon   float64  `json:"minCoupon"`
+	MaximumMaturity Duration `json:"maxMaturity"`
+	MinimumPrice    float64  `json:"minPrice"`
+	MaximumPrice    float64  `json:"maxPrice"`
+}
+
+// Duration stores the duration in years.
+type Duration struct {
+	time.Duration
+}
+
+// UnmarshalJSON parse and store a duration in years.
+func (d *Duration) UnmarshalJSON(b []byte) error {
+	var v interface{}
+	if err := json.Unmarshal(b, &v); err != nil {
+		return errors.Wrap(err, "failed to parse duration")
+	}
+	switch value := v.(type) {
+	case float64:
+		d.Duration = time.Duration(value*365*24) * time.Hour
+	default:
+		return errors.New("invalid duration")
+	}
+
+	return nil
 }
 
 // Bond contains the bond descriptions.
@@ -62,19 +94,20 @@ type Bond struct {
 
 // Interesting returns if the bond is interesting according to some predefined
 // rules.
-func (b Bond) Interesting() bool {
+func (b Bond) Interesting(f Filter) bool {
 	// remove bonds with low coupon
-	if b.Coupon < 5 {
+	if b.Coupon < f.MinimumCoupon {
 		return false
 	}
 
 	// remove bonds with no date or more than 6 years of maturity
-	if b.Maturity == nil || b.Maturity.After(time.Now().Add(time.Hour*24*365*6)) {
+	maximumMaturity := time.Now().Add(f.MaximumMaturity.Duration)
+	if b.Maturity == nil || b.Maturity.After(maximumMaturity) {
 		return false
 	}
 
 	// remove bonds with low price or too expensive
-	if b.LastPrice < 95 || b.LastPrice > 101 {
+	if b.LastPrice < f.MinimumPrice || b.LastPrice > f.MaximumPrice {
 		return false
 	}
 
@@ -166,10 +199,10 @@ func (b Bonds) Swap(i, j int) {
 }
 
 // Filter detect the most interesting bonds according to some predefined rules.
-func (b Bonds) Filter() Bonds {
+func (b Bonds) Filter(f Filter) Bonds {
 	filtered := make(Bonds, 0, len(b))
 	for _, bond := range b {
-		if bond.Interesting() {
+		if bond.Interesting(f) {
 			filtered = append(filtered, bond)
 		}
 	}

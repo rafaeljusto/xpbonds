@@ -24,7 +24,7 @@ func FindBestBonds(ctx context.Context, report BondReport) (Bonds, error) {
 		return nil, errors.Wrap(err, "failed to parse excel")
 	}
 
-	bonds = bonds.Filter()
+	bonds = bonds.Filter(report.Filter)
 	bonds.FillCurrentPrice()
 	sort.Sort(bonds)
 	return bonds, nil
