@@ -232,6 +232,10 @@
 
             $("#sendReport").removeClass("disabled");
             $("#sendReport").html("Submit");
+
+            $([document.documentElement, document.body]).animate({
+              scrollTop: $("#result").offset().top
+            }, 2000);
           },
           error: function(jqXHR, textStatus, errorThrown) {
             console.info(jqXHR);
