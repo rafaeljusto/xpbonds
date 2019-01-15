@@ -20,7 +20,7 @@
       </a>
     </nav>
     <div class="container-fluid">
-      <form id="form" class="mb-4">
+      <form id="form" class="mb-4 d-print-none">
         <div class="form-group">
           <label for="report">Report</label>
           <input type="file" name="report" id="report" class="form-control-file" aria-describedby="reportHelp" placeholder="Enter report path" required>
@@ -61,9 +61,9 @@
         <button type="submit" class="btn btn-primary" id="sendReport">Submit</button>
       </form>
 
-      <hr>
+      <hr class="d-print-none">
 
-      <form>
+      <form class="d-print-none">
         <div class="form-check">
           <input type="checkbox" id="showAllFields" class="form-check-input">
           <label for="showAllFields" class="form-check-label">Show all fields</label>
