@@ -61,7 +61,7 @@ Where:
 * **xlsxReport** is the XLSX report encoded in base64;
 * **dateFormat** defines the date format used in the report, possible values are
   `MM/DD/YYYY` or `DD/MM/YYYY`;
-* **minCoupon** will filter bonds that have a coupon rate less than the
+* **minCoupon** will filter bonds that have a coupon rate (%) less than the
   provided;
 * **maxMaturity** defined in years also will filter bonds with an expiration
   date too far away;
