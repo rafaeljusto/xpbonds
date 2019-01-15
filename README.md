@@ -4,22 +4,25 @@ XP Bonds
 [![GoDoc](https://godoc.org/github.com/rafaeljusto/xpbonds?status.png)](https://godoc.org/github.com/rafaeljusto/xpbonds)
 [![license](http://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/rafaeljusto/xpbonds/master/LICENSE)
 
-[Serverless solution](https://github.com/rafaeljusto/xpbonds/blob/master/cmd/xpbonds-serveless/main.go) to download, parse and analyze bond reports from [XP Investments](https://www.xpi.us). It was built to run in [AWS Lambda service](https://aws.amazon.com/lambda/). There's also a [common HTTP server solution](https://github.com/rafaeljusto/xpbonds/blob/master/cmd/xpbonds/main.go) that can be used in other environments.
+[Serverless solution](https://github.com/rafaeljusto/xpbonds/blob/master/cmd/xpbonds-serveless/main.go) to parse and analyze bond reports from [XP Investments](https://www.xpi.us). It was built to run in [AWS Lambda service](https://aws.amazon.com/lambda/). There's also a [common HTTP server solution](https://github.com/rafaeljusto/xpbonds/blob/master/cmd/xpbonds/main.go) that can be used in other environments.
 
 How does it works?
 ------------------
 
-The service receives a link to download a PDF report from XP Investments like the bellow.
+The service receives the Focused Lists report from XP Investments, in Excel
+format (xlsx), like the bellow.
 
 ![XP Investments Report Example](https://github.com/rafaeljusto/xpbonds/raw/master/xpbonds.png "XP Investments Report Example")
 
-It will convert the PDF into an Excel spreadsheet using the [PDFToExcel](https://www.pdftoexcel.com/) service. The generated Excel will be analyzed filtering undesired bonds with the following rules:
+The Excel report will be analyzed filtering undesired bonds with the following
+rules:
 
-* Coupon must be equal or greater than 5%
-* Maturity must be in the next 6 years
-* Price must be between U$95 and U$101
+* Minimum coupon rate
+* Maturity
+* Price
 
-The resulted bonds will be sorted by coupon.
+The resulted bonds will be sorted by coupon. Current market price will also be
+retrieved to compare with the report (when available).
 
 Serveless Setup
 ---------------
@@ -41,13 +44,29 @@ Serveless Setup
 Serveless Protocol
 ------------------
 
-The JSON that the service is expecting a [events.APIGatewayProxyRequest](https://godoc.org/github.com/aws/aws-lambda-go/events#APIGatewayProxyRequest), where the method should be `POST` and the body should be something like:
+The JSON that the service is expecting a [events.APIGatewayProxyRequest](https://godoc.org/github.com/aws/aws-lambda-go/events#APIGatewayProxyRequest), where the method should be `POST` and the body should be:
 
 ```json
 {
-  "location": "https://gallery.mailchimp.com/.../files/.../Daily_List_Brazil_20181210.pdf"
+  "xlsxReport": "EsDBBQABgAIAAAAIQBG8ICPdQEAAD...BQYAAAAADwAPAN4DAABChAEAAAA=",
+  "dateFormat": "MM/DD/YYYY",
+  "minCoupon": 5,
+  "maxMaturity": 6,
+  "minPrice": 95,
+  "maxPrice": 101
 }
 ```
+
+Where:
+* **xlsxReport** is the XLSX report encoded in base64;
+* **dateFormat** defines the date format used in the report, possible values are
+  `MM/DD/YYYY` or `DD/MM/YYYY`;
+* **minCoupon** will filter bonds that have a coupon rate (%) less than the
+  provided;
+* **maxMaturity** defined in years also will filter bonds with an expiration
+  date too far away;
+* **minPrice** and **maxPrice** defines a range of acceptable market prices for
+  the bonds.
 
 CORS is enable to make it easy for cross-domain requests. The response will be a [events.APIGatewayProxyResponse](https://godoc.org/github.com/aws/aws-lambda-go/events#APIGatewayProxyResponse), where the body will contain a list of bonds in the following format:
 

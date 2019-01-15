@@ -1,17 +1,77 @@
 package xpbonds
 
 import (
+	"encoding/json"
 	"log"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/pkg/errors"
 )
 
-// BondReport contains the location of the bond rates.
+// DateFormat defines all acceptable date formats used when parsing the report.
+type DateFormat string
+
+// List of available date formats.
+const (
+	DateFormatDDMMYYYY = "dd/mm/yyyy"
+	DateFormatMMDDYYYY = "mm/dd/yyyy"
+)
+
+// UnmarshalJSON parse the date format input value. It will return an error if
+// the date format isn't acceptable.
+func (d *DateFormat) UnmarshalJSON(data []byte) error {
+	dataStr := string(data)
+	dataStr = strings.TrimSpace(dataStr)
+	dataStr = strings.ToLower(dataStr)
+
+	switch dataStr {
+	case string(DateFormatDDMMYYYY):
+		*d = DateFormatDDMMYYYY
+	case string(DateFormatMMDDYYYY):
+		*d = DateFormatMMDDYYYY
+	}
+
+	return errors.Errorf("invalid date format '%s'", dataStr)
+}
+
+// BondReport contains all bonds data to be analyzed.
 type BondReport struct {
-	Location string `json:"location"`
+	Filter
+
+	XLXSReport string     `json:"xlsxReport"`
+	DateFormat DateFormat `json:"dateFormat"`
+}
+
+// Filter contains all filters that can be used to determinate the best bond.
+type Filter struct {
+	MinimumCoupon   float64  `json:"minCoupon"`
+	MaximumMaturity Duration `json:"maxMaturity"`
+	MinimumPrice    float64  `json:"minPrice"`
+	MaximumPrice    float64  `json:"maxPrice"`
+}
+
+// Duration stores the duration in years.
+type Duration struct {
+	time.Duration
+}
+
+// UnmarshalJSON parse and store a duration in years.
+func (d *Duration) UnmarshalJSON(b []byte) error {
+	var v interface{}
+	if err := json.Unmarshal(b, &v); err != nil {
+		return errors.Wrap(err, "failed to parse duration")
+	}
+	switch value := v.(type) {
+	case float64:
+		d.Duration = time.Duration(value*365*24) * time.Hour
+	default:
+		return errors.New("invalid duration")
+	}
+
+	return nil
 }
 
 // Bond contains the bond descriptions.
@@ -34,72 +94,83 @@ type Bond struct {
 
 // Interesting returns if the bond is interesting according to some predefined
 // rules.
-func (b Bond) Interesting() bool {
+func (b Bond) Interesting(f Filter) bool {
 	// remove bonds with low coupon
-	if b.Coupon < 5 {
+	if b.Coupon < f.MinimumCoupon {
 		return false
 	}
 
 	// remove bonds with no date or more than 6 years of maturity
-	if b.Maturity == nil || b.Maturity.After(time.Now().Add(time.Hour*24*365*6)) {
+	maximumMaturity := time.Now().Add(f.MaximumMaturity.Duration)
+	if b.Maturity == nil || b.Maturity.After(maximumMaturity) {
 		return false
 	}
 
 	// remove bonds with low price or too expensive
-	if b.LastPrice < 95 || b.LastPrice > 101 {
+	if b.LastPrice < f.MinimumPrice || b.LastPrice > f.MaximumPrice {
 		return false
 	}
 
 	return true
 }
 
-func parseBond(row []string) (Bond, error) {
+func parseBond(row row, dateFormat DateFormat) (Bond, error) {
 	bond := Bond{
-		Name:     row[0],
-		Security: row[1],
+		Name:     row.get(0),
+		Security: row.get(1),
 		Risk: BondRisk{
-			StandardPoor: row[9],
-			Moody:        row[10],
-			Fitch:        row[11],
+			StandardPoor: row.get(9),
+			Moody:        row.get(10),
+			Fitch:        row.get(11),
 		},
-		Country: row[14],
-		Code:    row[15],
+		Country: row.get(14),
+		Code:    row.get(15),
 	}
 
 	var err error
 
-	if bond.Coupon, err = strconv.ParseFloat(row[2], 64); err != nil {
-		return bond, errors.Wrap(err, "failed to parse coupon")
+	if coupon := row.get(2); coupon != "" {
+		if bond.Coupon, err = strconv.ParseFloat(coupon, 64); err != nil {
+			return bond, errors.Wrap(err, "failed to parse coupon")
+		}
 	}
 
-	if row[3] != "n.a." {
-		maturity, err := time.Parse("1/2/2006", row[3])
+	if maturity := row.get(3); maturity != "" {
+		m, err := parseTime(maturity, dateFormat)
 		if err != nil {
 			return bond, errors.Wrap(err, "failed to parse maturity")
 		}
-		bond.Maturity = &maturity
+		bond.Maturity = &m
 	}
 
-	if bond.LastPrice, err = strconv.ParseFloat(row[5], 64); err != nil {
-		return bond, errors.Wrap(err, "failed to parse last price")
+	if lastPrice := row.get(5); lastPrice != "" {
+		if bond.LastPrice, err = strconv.ParseFloat(lastPrice, 64); err != nil {
+			return bond, errors.Wrap(err, "failed to parse last price")
+		}
 	}
 
-	if bond.Yield, err = strconv.ParseFloat(row[6], 64); err != nil {
-		return bond, errors.Wrap(err, "failed to parse yield")
+	if yield := row.get(6); yield != "" {
+		if bond.Yield, err = strconv.ParseFloat(yield, 64); err != nil {
+			return bond, errors.Wrap(err, "failed to parse yield")
+		}
 	}
 
-	if bond.Duration, err = strconv.ParseFloat(row[7], 64); err != nil {
-		return bond, errors.Wrap(err, "failed to parse duration")
+	if duration := row.get(7); duration != "" {
+		if bond.Duration, err = strconv.ParseFloat(duration, 64); err != nil {
+			return bond, errors.Wrap(err, "failed to parse duration")
+		}
 	}
 
-	if row[8] != "n.a." {
-		if bond.YearsToMaturity, err = strconv.ParseFloat(row[8], 64); err != nil {
+	if yearsToMaturity := row.get(8); yearsToMaturity != "" {
+		if bond.YearsToMaturity, err = strconv.ParseFloat(yearsToMaturity, 64); err != nil {
 			return bond, errors.Wrap(err, "failed to parse years to maturity")
 		}
 	}
 
-	if bond.MinimumPiece, err = strconv.ParseFloat(row[13], 64); err != nil {
-		return bond, errors.Wrap(err, "failed to parse minimum piece")
+	if minimumPiece := row.get(13); minimumPiece != "" {
+		if bond.MinimumPiece, err = strconv.ParseFloat(minimumPiece, 64); err != nil {
+			return bond, errors.Wrap(err, "failed to parse minimum piece")
+		}
 	}
 
 	return bond, nil
@@ -128,10 +199,10 @@ func (b Bonds) Swap(i, j int) {
 }
 
 // Filter detect the most interesting bonds according to some predefined rules.
-func (b Bonds) Filter() Bonds {
+func (b Bonds) Filter(f Filter) Bonds {
 	filtered := make(Bonds, 0, len(b))
 	for _, bond := range b {
-		if bond.Interesting() {
+		if bond.Interesting(f) {
 			filtered = append(filtered, bond)
 		}
 	}
@@ -151,4 +222,20 @@ func (b Bonds) FillCurrentPrice() {
 		}(&b[i])
 	}
 	wg.Wait()
+}
+
+func parseTime(value string, dateFormat DateFormat) (time.Time, error) {
+	var format string
+	switch dateFormat {
+	case DateFormatDDMMYYYY:
+		format = "2/1/2006"
+	default: // DateFormatMMDDYYYY
+		format = "1/2/2006"
+	}
+
+	t, err := time.Parse(format, value)
+	if err != nil {
+		return t, errors.Wrap(err, "failed to parse time")
+	}
+	return t, nil
 }

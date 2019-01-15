@@ -1,38 +1,45 @@
 package xpbonds
 
 import (
-	"regexp"
+	"io"
 	"strings"
 
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/pkg/errors"
 )
 
-var reNumber = regexp.MustCompile(`^[[:digit:]]+$`)
+const invalidCell = "#VALUE!"
 
-// ignoreCells are the cell contents that will identify rows that should be
-// ignored when parsing the converted excel.
-var ignoreCells = map[string]bool{
-	"Name": true,
-	"BRAZIL BONDS (USD) - DAILY INDICATIVE RUN": true,
-	"Disclaimers": true,
-}
-
-func parseExcel(excel string) (Bonds, error) {
-	xlsx, err := excelize.OpenFile(excel)
+func parseExcel(excel io.Reader, dateFormat DateFormat) (Bonds, error) {
+	xlsx, err := excelize.OpenReader(excel)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open excel")
 	}
 
-	rows := xlsx.GetRows("Sheet1")
+	sheets := xlsx.GetSheetMap()
+	var bonds Bonds
+	for _, sheet := range sheets {
+		rows := xlsx.GetRows(sheet)
+		sheetBonds, err := parseSheet(rows, dateFormat)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse sheet '%s'", sheet)
+		}
+		bonds = append(bonds, sheetBonds...)
+	}
+
+	return bonds, nil
+}
+
+func parseSheet(rows [][]string, dateFormat DateFormat) (Bonds, error) {
 	normalized := make(Bonds, 0, len(rows))
 
-	for _, row := range rows {
-		if ignoreRow(row) {
+	for _, r := range rows {
+		row := row(r)
+		if row.ignore() {
 			continue
 		}
 
-		bond, err := parseBond(row)
+		bond, err := parseBond(row, dateFormat)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to parse bond")
 		}
@@ -43,23 +50,41 @@ func parseExcel(excel string) (Bonds, error) {
 	return normalized, nil
 }
 
-func ignoreRow(row []string) bool {
-	if len(row) != 16 {
+type row []string
+
+func (r row) ignore() bool {
+	if len(r) != 16 {
 		return true
 	}
 
-	cell := strings.TrimSpace(row[0])
-	if cell == "" || ignoreCells[cell] || reNumber.MatchString(cell) {
+	cell := strings.TrimSpace(r[0])
+	if cell == "" || cell == "Name" {
 		return true
 	}
 
 	// detect and remove lines without value
 	empty := true
-	for _, cell := range row[1:] {
+	for _, cell := range r[1:] {
 		if cell != "" {
 			empty = false
 			break
 		}
 	}
 	return empty
+}
+
+func (r row) get(i int) string {
+	if i < 0 || i >= len(r) || r[i] == invalidCell {
+		return ""
+	}
+
+	v := r[i]
+	v = strings.ToLower(v)
+	v = strings.TrimSpace(v)
+
+	if strings.Contains(v, "n.a.") || strings.Contains(v, "n/a") {
+		return ""
+	}
+
+	return r[i]
 }
