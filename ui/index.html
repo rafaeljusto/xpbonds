@@ -122,11 +122,11 @@
               var percentage = (yield*100/coupon)-100;
 
               if (yield < coupon) {
-                $(nTd).html("<span class='text-success'>"+oData.yield+" (<i class='fas fa-arrow-down'></i> " + percentage.toFixed(2) + "%)</span>");  
+                $(nTd).html("<span class='text-success'>" + yield.toFixed(2) + " (<i class='fas fa-arrow-down'></i> " + percentage.toFixed(2) + "%)</span>");  
               } else if (yield > coupon) {
-                $(nTd).html("<span class='text-danger'>"+oData.yield+" (<i class='fas fa-arrow-up'></i> " + percentage.toFixed(2) + "%)</span>");  
+                $(nTd).html("<span class='text-danger'>" + yield.toFixed(2) + " (<i class='fas fa-arrow-up'></i> " + percentage.toFixed(2) + "%)</span>");  
               } else {
-                $(nTd).html(oData.yield);
+                $(nTd).html(yield.toFixed(2));
               }
             }
           },
