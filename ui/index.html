@@ -58,6 +58,16 @@
           <input type="number" min="1" max="200" name="maxPrice" id="maxPrice" class="form-control" aria-describedby="maxPriceHelp" value="101" required>
           <small id="maxPriceHelp" class="form-text text-muted">Maximum price that you will pay for a bond.</small>
         </div>
+        <div class="form-group">
+          <label for="minPiece">Minimum Piece ($)</label>
+          <input type="number" min="0" max="1000000" name="minPiece" id="minPiece" class="form-control" aria-describedby="minPieceHelp" value="0" required>
+          <small id="minPieceHelp" class="form-text text-muted">Minimum piece accepted.</small>
+        </div>
+        <div class="form-group">
+          <label for="maxPiece">Maximum Piece ($)</label>
+          <input type="number" min="0" max="1000000" name="maxPiece" id="maxPiece" class="form-control" aria-describedby="maxPieceHelp" value="400000" required>
+          <small id="maxPieceHelp" class="form-text text-muted">Maximum value for the minimum piece.</small>
+        </div>
         <button type="submit" class="btn btn-primary" id="sendReport">Submit</button>
       </form>
 
@@ -229,7 +239,9 @@
             "minCoupon": parseInt($("#minCoupon").val(), 10),
             "maxMaturity": parseInt($("#maxMaturity").val(), 10),
             "minPrice": parseInt($("#minPrice").val(), 10),
-            "maxPrice": parseInt($("#maxPrice").val(), 10)
+            "maxPrice": parseInt($("#maxPrice").val(), 10),
+            "minPiece": parseInt($("#minPiece").val(), 10),
+            "maxPiece": parseInt($("#maxPiece").val(), 10)
           }),
           dataType: "json",
           success: function(data, textStatus, jqXHR) {

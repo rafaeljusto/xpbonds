@@ -51,6 +51,8 @@ type Filter struct {
 	MaximumMaturity Duration `json:"maxMaturity"`
 	MinimumPrice    float64  `json:"minPrice"`
 	MaximumPrice    float64  `json:"maxPrice"`
+	MinimumPiece    float64  `json:"minPiece"`
+	MaximumPiece    float64  `json:"maxPiece"`
 }
 
 // Duration stores the duration in years.
@@ -110,6 +112,10 @@ func (b Bond) Interesting(f Filter) bool {
 
 	// remove bonds with low price or too expensive
 	if b.LastPrice < f.MinimumPrice || b.LastPrice > f.MaximumPrice {
+		return false
+	}
+
+	if b.MinimumPiece < f.MinimumPiece || b.MinimumPiece > f.MaximumPiece {
 		return false
 	}
 

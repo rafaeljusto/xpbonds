@@ -53,7 +53,9 @@ The JSON that the service is expecting a [events.APIGatewayProxyRequest](https:/
   "minCoupon": 5,
   "maxMaturity": 6,
   "minPrice": 95,
-  "maxPrice": 101
+  "maxPrice": 101,
+  "minPiece": 0,
+  "maxPiece": 400000
 }
 ```
 
@@ -66,7 +68,10 @@ Where:
 * **maxMaturity** defined in years also will filter bonds with an expiration
   date too far away;
 * **minPrice** and **maxPrice** defines a range of acceptable market prices for
-  the bonds.
+  the bonds;
+* **minPiece** and **maxPiece** defines a range of acceptable minimum piece of a
+  bond. The informed values will match the minimum piece in the current
+  currency.
 
 CORS is enable to make it easy for cross-domain requests. The response will be a [events.APIGatewayProxyResponse](https://godoc.org/github.com/aws/aws-lambda-go/events#APIGatewayProxyResponse), where the body will contain a list of bonds in the following format:
 
