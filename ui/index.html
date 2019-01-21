@@ -80,6 +80,7 @@
             <th class="align-middle" scope="col" rowspan="2">Maturity</th>
             <th class="align-middle" scope="col" rowspan="2">Last Price</th>
             <th class="align-middle" scope="col" rowspan="2">Current Price</th>
+            <th class="align-middle" scope="col" rowspan="2">Accrued per Bond</th>
             <th class="align-middle" scope="col" rowspan="2">Duration</th>
             <th class="align-middle" scope="col" rowspan="2">Years to Maturity</th>
             <th class="align-middle" scope="col" rowspan="2">Minimum Piece</th>
@@ -158,6 +159,12 @@
               } else {
                 $(nTd).html("-");
               }
+            }
+          },
+          {
+            data: "accrued",
+            "fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {
+              $(nTd).html(numeral(oData.accrued).format("$0,0.00") + " (" + oData.accruedDays + " days)");
             }
           },
           {
@@ -267,14 +274,14 @@
       $("#showAllFields").on("click", function(e) {
         if (this.checked) {
           datatable.column(1).visible(true);
-          datatable.column(7).visible(true);
           datatable.column(8).visible(true);
-          datatable.column(14).visible(true);
+          datatable.column(9).visible(true);
+          datatable.column(15).visible(true);
         } else {
           datatable.column(1).visible(false);
-          datatable.column(7).visible(false);
           datatable.column(8).visible(false);
-          datatable.column(14).visible(false);
+          datatable.column(9).visible(false);
+          datatable.column(15).visible(false);
         }
       });
     });

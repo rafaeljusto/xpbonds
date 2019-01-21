@@ -84,6 +84,8 @@ type Bond struct {
 	LastPrice       float64    `json:"lastPrice"`
 	CurrentPrice    *float64   `json:"currentPrice"`
 	CurrentPriceURL *string    `json:"currentPriceURL"`
+	Accrued         float64    `json:"accrued"`
+	AccruedDays     int64      `json:"accruedDays"`
 	Duration        float64    `json:"duration"`
 	YearsToMaturity float64    `json:"yearsToMaturity"`
 	MinimumPiece    float64    `json:"minimumPiece"`
@@ -112,6 +114,30 @@ func (b Bond) Interesting(f Filter) bool {
 	}
 
 	return true
+}
+
+func (b *Bond) calculateAccrued() {
+	if b.Maturity == nil {
+		return
+	}
+
+	m := *b.Maturity
+	lastInterestDate := time.Date(
+		time.Now().In(m.Location()).Year(), m.Month(),
+		m.Day(),
+		m.Hour(),
+		m.Minute(),
+		m.Second(),
+		m.Nanosecond(),
+		m.Location(),
+	)
+
+	for lastInterestDate.After(time.Now()) {
+		lastInterestDate = lastInterestDate.AddDate(0, -6, 0)
+	}
+
+	b.AccruedDays = int64(time.Now().Sub(lastInterestDate).Truncate(time.Hour).Hours()) / 24
+	b.Accrued = (b.Coupon / 365) * float64(b.AccruedDays)
 }
 
 func parseBond(row row, dateFormat DateFormat) (Bond, error) {
@@ -173,6 +199,7 @@ func parseBond(row row, dateFormat DateFormat) (Bond, error) {
 		}
 	}
 
+	bond.calculateAccrued()
 	return bond, nil
 }
 
