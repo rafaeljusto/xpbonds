@@ -59,14 +59,18 @@
           <small id="maxPriceHelp" class="form-text text-muted">Maximum price that you will pay for a bond.</small>
         </div>
         <div class="form-group">
-          <label for="minPiece">Minimum Piece ($)</label>
+          <label for="minPiece">Minimum Piece (U$)</label>
           <input type="number" min="0" max="1000000" name="minPiece" id="minPiece" class="form-control" aria-describedby="minPieceHelp" value="0" required>
           <small id="minPieceHelp" class="form-text text-muted">Minimum piece accepted.</small>
         </div>
         <div class="form-group">
-          <label for="maxPiece">Maximum Piece ($)</label>
+          <label for="maxPiece">Maximum Piece (U$)</label>
           <input type="number" min="0" max="1000000" name="maxPiece" id="maxPiece" class="form-control" aria-describedby="maxPieceHelp" value="400000" required>
           <small id="maxPieceHelp" class="form-text text-muted">Maximum value for the minimum piece.</small>
+        </div>
+        <div class="form-check mb-4">
+          <input type="checkbox" name="focusedOnly" id="focusedOnly" class="form-check-input">
+          <label for="focusedOnly" class="form-check-label">Analyze only focused reports (XP recommendations)</label>
         </div>
         <button type="submit" class="btn btn-primary" id="sendReport">Submit</button>
       </form>
@@ -241,7 +245,8 @@
             "minPrice": parseInt($("#minPrice").val(), 10),
             "maxPrice": parseInt($("#maxPrice").val(), 10),
             "minPiece": parseInt($("#minPiece").val(), 10),
-            "maxPiece": parseInt($("#maxPiece").val(), 10)
+            "maxPiece": parseInt($("#maxPiece").val(), 10),
+            "focusedOnly": $("#focusedOnly").is(":checked")
           }),
           dataType: "json",
           success: function(data, textStatus, jqXHR) {

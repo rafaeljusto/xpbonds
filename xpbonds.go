@@ -19,7 +19,7 @@ func FindBestBonds(ctx context.Context, report BondReport) (Bonds, error) {
 		return nil, errors.Wrap(err, "failed to decode excel report")
 	}
 
-	bonds, err := parseExcel(bytes.NewReader(excel), report.DateFormat)
+	bonds, err := parseExcel(bytes.NewReader(excel), report.DateFormat, report.FocusedOnly)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse excel")
 	}

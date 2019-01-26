@@ -70,8 +70,9 @@ Where:
 * **minPrice** and **maxPrice** defines a range of acceptable market prices for
   the bonds;
 * **minPiece** and **maxPiece** defines a range of acceptable minimum piece of a
-  bond. The informed values will match the minimum piece in the current
-  currency.
+  bond;
+* **focusedOnly** flag to determinate if only XP suggested bonds should be
+  analyzed.
 
 CORS is enable to make it easy for cross-domain requests. The response will be a [events.APIGatewayProxyResponse](https://godoc.org/github.com/aws/aws-lambda-go/events#APIGatewayProxyResponse), where the body will contain a list of bonds in the following format:
 

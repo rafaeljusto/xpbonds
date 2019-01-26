@@ -53,6 +53,7 @@ type Filter struct {
 	MaximumPrice    float64  `json:"maxPrice"`
 	MinimumPiece    float64  `json:"minPiece"`
 	MaximumPiece    float64  `json:"maxPiece"`
+	FocusedOnly     bool     `json:"focusedOnly"`
 }
 
 // Duration stores the duration in years.

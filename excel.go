@@ -2,6 +2,7 @@ package xpbonds
 
 import (
 	"io"
+	"regexp"
 	"strings"
 
 	"github.com/360EntSecGroup-Skylar/excelize"
@@ -10,7 +11,9 @@ import (
 
 const invalidCell = "#VALUE!"
 
-func parseExcel(excel io.Reader, dateFormat DateFormat) (Bonds, error) {
+var reFocusedSheet = regexp.MustCompile("(?i)^focused [a-z]+$")
+
+func parseExcel(excel io.Reader, dateFormat DateFormat, focusedOnly bool) (Bonds, error) {
 	xlsx, err := excelize.OpenReader(excel)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to open excel")
@@ -19,6 +22,10 @@ func parseExcel(excel io.Reader, dateFormat DateFormat) (Bonds, error) {
 	sheets := xlsx.GetSheetMap()
 	var bonds Bonds
 	for _, sheet := range sheets {
+		if focusedOnly && !reFocusedSheet.MatchString(sheet) {
+			continue
+		}
+
 		rows := xlsx.GetRows(sheet)
 		sheetBonds, err := parseSheet(rows, dateFormat)
 		if err != nil {
