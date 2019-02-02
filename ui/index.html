@@ -9,6 +9,7 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.2.1/css/flag-icon.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" integrity="sha256-rByPlHULObEjJ6XQxW/flG2r+22R5dKiAoef+aXWfik=" crossorigin="anonymous" />
 
     <title>XP Investments - Bonds Report</title>
   </head>
@@ -27,12 +28,12 @@
           <small id="reportHelp" class="form-text text-muted">Add the report file received from XP Investments.</small>
         </div>
         <div class="form-group">
-          <label>Date Format</label>
-          <div class="form-check">
+          <label class="d-block">Date Format</label>
+          <div class="form-check form-check-inline">
             <input type="radio" name="dateFormat" id="dateFormatMMDDYYYY" value="dd/mm/yyyy" class="form-check-input" aria-describedby="dateFormatHelp" checked>
             <label class="form-check-label" for="dateFormatMMDDYYYY">MM/DD/YYYY</label>
           </div>
-          <div class="form-check">
+          <div class="form-check form-check-inline">
             <input type="radio" name="dateFormat" id="dateFormatDDMMYYYY" value="dd/mm/yyyy" class="form-check-input" aria-describedby="dateFormatHelp">
             <label class="form-check-label" for="dateFormatDDMMYYYY">DD/MM/YYYY</label>
           </div>
@@ -49,24 +50,16 @@
           <small id="maxMaturityHelp" class="form-text text-muted">Define the maximum number of years for the bond expiration.</small>
         </div>
         <div class="form-group">
-          <label for="minPrice">Minimum Price (U$)</label>
-          <input type="number" min="1" max="200" name="minPrice" id="minPrice" class="form-control" aria-describedby="minPriceHelp" value="95" required>
-          <small id="minPriceHelp" class="form-text text-muted">Minimum price that you will pay for a bond.</small>
+          <label>Price (U$):</label>
+          <span id="price">$95 - $101</span>
+          <div id="priceRange"></div>
+          <small id="priceHelp" class="form-text text-muted">Price range that you will pay for a bond.</small>
         </div>
         <div class="form-group">
-          <label for="maxPrice">Maximum Price (U$)</label>
-          <input type="number" min="1" max="200" name="maxPrice" id="maxPrice" class="form-control" aria-describedby="maxPriceHelp" value="101" required>
-          <small id="maxPriceHelp" class="form-text text-muted">Maximum price that you will pay for a bond.</small>
-        </div>
-        <div class="form-group">
-          <label for="minPiece">Minimum Piece (U$)</label>
-          <input type="number" min="0" max="1000000" name="minPiece" id="minPiece" class="form-control" aria-describedby="minPieceHelp" value="0" required>
-          <small id="minPieceHelp" class="form-text text-muted">Minimum piece accepted.</small>
-        </div>
-        <div class="form-group">
-          <label for="maxPiece">Maximum Piece (U$)</label>
-          <input type="number" min="0" max="1000000" name="maxPiece" id="maxPiece" class="form-control" aria-describedby="maxPieceHelp" value="400000" required>
-          <small id="maxPieceHelp" class="form-text text-muted">Maximum value for the minimum piece.</small>
+          <label>Piece (U$):</label>
+          <span id="piece">$0 - $200,000</span>
+          <div id="pieceRange"></div>
+          <small id="pieceHelp" class="form-text text-muted">Piece range that you can afford.</small>
         </div>
         <div class="form-check mb-4">
           <input type="checkbox" name="focusedOnly" id="focusedOnly" class="form-check-input">
@@ -112,6 +105,7 @@
     </div>
 
     <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js" integrity="sha256-KM512VNnjElC30ehFwehXjx1YCHPiQkOPmqnrWtpccM=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
@@ -242,10 +236,10 @@
             "dateFormat": $("#dateFormat").val(),
             "minCoupon": parseInt($("#minCoupon").val(), 10),
             "maxMaturity": parseInt($("#maxMaturity").val(), 10),
-            "minPrice": parseInt($("#minPrice").val(), 10),
-            "maxPrice": parseInt($("#maxPrice").val(), 10),
-            "minPiece": parseInt($("#minPiece").val(), 10),
-            "maxPiece": parseInt($("#maxPiece").val(), 10),
+            "minPrice": $("#priceRange").slider("values", 0),
+            "maxPrice": $("#priceRange").slider("values", 1),
+            "minPiece": $("#pieceRange").slider("values", 0),
+            "maxPiece": $("#pieceRange").slider("values", 1),
             "focusedOnly": $("#focusedOnly").is(":checked")
           }),
           dataType: "json",
@@ -299,6 +293,25 @@
           datatable.column(8).visible(false);
           datatable.column(9).visible(false);
           datatable.column(15).visible(false);
+        }
+      });
+
+      $("#priceRange").slider({
+        range: true,
+        min: 1,
+        max: 200,
+        values: [95, 101],
+        slide: function(event, ui) {
+          $("#price").html(numeral(ui.values[0]).format("$0,0") +  " - " + numeral(ui.values[1]).format("$0,0"));
+        }
+      });
+      $("#pieceRange").slider({
+        range: true,
+        min: 0,
+        max: 500000,
+        values: [0, 200000],
+        slide: function(event, ui) {
+          $("#piece").html(numeral(ui.values[0]).format("$0,0") +  " - " + numeral(ui.values[1]).format("$0,0"));
         }
       });
     });
