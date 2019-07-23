@@ -233,7 +233,7 @@
           contentType: "application/json; charset=utf-8",
           data: JSON.stringify({
             "xlsxReport": data,
-            "dateFormat": $("#dateFormat").val(),
+            "dateFormat": $("input:radio[name='dateFormat']:checked").val(),
             "minCoupon": parseInt($("#minCoupon").val(), 10),
             "maxMaturity": parseInt($("#maxMaturity").val(), 10),
             "minPrice": $("#priceRange").slider("values", 0),

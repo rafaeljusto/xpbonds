@@ -23,7 +23,11 @@ const (
 // UnmarshalJSON parse the date format input value. It will return an error if
 // the date format isn't acceptable.
 func (d *DateFormat) UnmarshalJSON(data []byte) error {
-	dataStr := string(data)
+	dataStr, err := strconv.Unquote(string(data))
+	if err != nil {
+		return errors.Wrap(err, "failed to parse date format")
+	}
+
 	dataStr = strings.TrimSpace(dataStr)
 	dataStr = strings.ToLower(dataStr)
 
@@ -32,9 +36,11 @@ func (d *DateFormat) UnmarshalJSON(data []byte) error {
 		*d = DateFormatDDMMYYYY
 	case string(DateFormatMMDDYYYY):
 		*d = DateFormatMMDDYYYY
+	default:
+		return errors.Errorf("invalid date format '%s'", dataStr)
 	}
 
-	return errors.Errorf("invalid date format '%s'", dataStr)
+	return nil
 }
 
 // BondReport contains all bonds data to be analyzed.
