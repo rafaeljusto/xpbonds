@@ -89,7 +89,7 @@ func (r row) get(i int) string {
 	v = strings.ToLower(v)
 	v = strings.TrimSpace(v)
 
-	if strings.Contains(v, "n.a.") || strings.Contains(v, "n/a") {
+	if strings.Contains(v, "n.a.") || strings.Contains(v, "n/a") || v == "-" {
 		return ""
 	}
 
